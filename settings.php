@@ -48,10 +48,6 @@ if ($hassiteconfig) {
                                             get_string('pdfownerpassword', 'local_lessonexport'),
                                             get_string('pdfownerpassword_desc', 'local_lessonexport'), ''));
 
-    $page->add(new admin_setting_configcheckbox('local_lessonexport/pdfFrontCoverPageNumbers',
-                                            get_string('pdffrontcoverpagenumbers', 'local_lessonexport'),
-                                            get_string('pdffrontcoverpagenumbers_desc', 'local_lessonexport'), 1));
-
     $page->add(new admin_setting_configcheckbox('local_lessonexport/pdfCoverInfoUpdated',
                                             get_string('pdfcoverupdated', 'local_lessonexport'),
                                             get_string('pdfcoverupdated_desc', 'local_lessonexport'), 1));

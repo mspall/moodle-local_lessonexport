@@ -351,9 +351,8 @@ class local_lessonexport
         $qtype = $page->qtype;
         $context = context_module::instance($this->cm->id);
 
-        // Don't look for answers in lesson types and don't print
-        // short answer answer patterns.
-        if ($pagetype == 1 || $pagetype == 20) {
+        // Don't look for answers in lesson types
+        if ($pagetype == 20) {
             return $contents;
         }
 
@@ -376,7 +375,10 @@ class local_lessonexport
                 continue;
             }
 
-            $contents .= "<div class='export_answer_$pagetype'>$answer->answer</div>";
+            $contents .= "<div class='export_answer_$pagetype'>
+                $answer->answer
+                <span>Score: $answer->score</span>
+            </div>";
             $contents = file_rewrite_pluginfile_urls($contents, 'pluginfile.php', $context->id,
                                                             'mod_lesson', 'page_answers', $answer->id);
         }
@@ -502,18 +504,14 @@ class local_lessonexport
         $pattern = '/<[^>]+class\s*=["\']{1}(?:-?[_a-zA-Z0-9-]*\s)?\s*pagebreak\s*(?:\s-?[_a-zA-Z0-9-]*)?["\']{1}\/?>(\s*<\/[A-Za-z]+>)?/';
         preg_match_all($pattern, $contents, $pagebreaks, PREG_OFFSET_CAPTURE);
 
-        // var_dump($contents);
-
         // If there are pagebreaks, split the content at them and loop over the segments.
         if (!empty($pagebreaks)) {
             $segments = preg_split($pattern, $contents);
 
             // Loop over segments and split content, add pages.
             foreach ($segments as $index=>$segment) {
-                // var_dump($segment);
                 try
                 {
-                    // \var_dump(htmlspecialchars($segment));
                     $exp->writeHTML($segment);
                 }
                 catch(Exception $e)
@@ -528,7 +526,6 @@ class local_lessonexport
         } else {
             try
             {
-                // \var_dump(htmlspecialchars($segment));
                 $exp->writeHTML($contents);
             }
             catch (Exception $e)
@@ -722,7 +719,7 @@ function local_lessonexport_extend_navigation($unused)
     $jslinks = array();
     foreach ($links as $name => $url) {
         $link = html_writer::link($url, $name);
-        $link = html_writer::div($link, 'exportpdf btn btn-inverse');
+        $link = html_writer::div($link, 'exportpdf');
         $jslinks[] = $link;
     }
 
@@ -1056,7 +1053,6 @@ class lessonexport_pdf extends pdf
         $this->SetFont('helvetica', '', 9);
         $this->SetY(-15);
 
-        $frontCoverPageNumbers = $config->pdfFrontCoverPageNumbers;
         $contents = array(
             $config->pdfFooterTopLeft,
             $config->pdfFooterTopMiddle,
@@ -1077,15 +1073,7 @@ class lessonexport_pdf extends pdf
 
             // Replace any [pagenumber] shortcodes the number on the current page.
             if (!(strpos($content, '[pagenumber]') === false)) {
-                if ($frontCoverPageNumbers == true || $frontCoverPageNumbers == false && $pageNumber > 1) {
-                    if ($frontCoverPageNumbers == true) {
-                        $content = str_replace('[pagenumber]', $pageNumber, $content);
-                    } else {
-                        $content = str_replace('[pagenumber]', $pageNumber-1, $content);
-                    }
-                } else {
-                    $content = '';
-                }
+                $content = str_replace('[pagenumber]', $pageNumber, $content);
             }
 
             // Replace any [numpages] shortcodes with the number of pages in the document.
@@ -1101,11 +1089,6 @@ class lessonexport_pdf extends pdf
             if (!(strpos($content, '[date]') === false)) {
                 $date = date("j F Y");
                 $content = str_replace('[date]', $date, $content);
-            }
-
-            // Replace and [pdfbreak] shortcodes with the pagebreak div element.
-            if (!(strpos($content, '[pdfbreak]') === false)) {
-                $content = str_replace('[pdfbreak]', '<div class="pagebreak"/>', $content);
             }
 
             // Replace any [course] shortcodes with the current course context.
